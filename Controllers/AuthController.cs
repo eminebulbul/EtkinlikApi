@@ -1,51 +1,57 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using EtkinlikApi0.Data;
+using EtkinlikApi0.Models;
 
-namespace EtkinlikApi0.Controllers // Proje ismine göre namespace'i ayarla
+namespace EtkinlikApi0.Controllers
 {
-    // --- Önceki DTO tanımlamalarını buraya veya ayrı bir Models klasörüne ekle ---
-    public class RegisterRequestDto
-    {
-        public string Username { get; set; }
-        public string Email { get; set; }
-        public string Password { get; set; }
-    }
-
-    public class LoginRequestDto
-    {
-        public string Email { get; set; }
-        public string Password { get; set; }
-    }
-
-    public class LoginResponseDto
-    {
-        public string Token { get; set; }
-    }
-    // --- DTO Tanımlamaları Bitiş ---
-
-
-    [Route("api/[controller]")] // -> /api/Auth
     [ApiController]
+    [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        // TODO: Servisleri inject et (IAuthService gibi)
+        private readonly AppDbContext _context;
 
-        [HttpPost("Register")] // POST /api/Auth/Register
-        public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
+        public AuthController(AppDbContext context)
         {
-            // TODO: Kayıt işlemleri
-            Console.WriteLine($"Register attempt: {request.Email}"); // Konsola log yazalım
-            // Şimdilik başarılı varsay
-            return Ok(new { message = "Kayıt başarılı (geçici)" });
+            _context = context;
         }
 
-        [HttpPost("Login")] // POST /api/Auth/Login
-        public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
+        // ✅ REGISTER (Kayıt Ol)
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] User request)
         {
-            // TODO: Giriş işlemleri
-             Console.WriteLine($"Login attempt: {request.Email}"); // Konsola log yazalım
-            // Şimdilik başarılı varsayıp sahte token dön
-            var fakeToken = "sahte_jwt_token_" + Guid.NewGuid().ToString();
-            return Ok(new LoginResponseDto { Token = fakeToken });
+            // Aynı email zaten var mı?
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (existingUser != null)
+                return BadRequest(new { message = "Bu e-posta adresi zaten kayıtlı." });
+
+            // Şifreyi basit tutuyoruz, istersen hashing ekleriz
+            var newUser = new User
+            {
+                Name = request.Name,
+                Email = request.Email,
+                Password = request.Password
+            };
+
+            _context.Users.Add(newUser);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Kayıt başarılı!", user = newUser });
         }
-    }
+
+        // ✅ LOGIN (Giriş Yap)
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] User request)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u =>
+                    u.Email.ToLower() == request.Email.ToLower() &&
+                    u.Password == request.Password);
+
+            if (user == null)
+                return Unauthorized(new { message = "E-posta veya şifre hatalı." });
+
+            return Ok(new { message = "Giriş başarılı!", user });
+        }
+            }
 }

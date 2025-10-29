@@ -1,20 +1,50 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using EtkinlikApi0.Data;
+using Microsoft.EntityFrameworkCore;
+
+
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Kestrel'i dışarı aç: mobil emulator / Chrome bağlanabilsin
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5221); // http://localhost:5221 ve dışarıdan 5221
+});
 
+// CORS politikası: Flutter web'in farklı origin'den çağırmasına izin ver
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Controller'ları ekle
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// CORS middleware en başlarda olsun
+app.UseCors("AllowAll");
+
+// Development ise Swagger / OpenAPI gibi şeyleri burada map edebilirsin
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    // app.MapOpenApi(); // varsa
 }
 
-app.UseHttpsRedirection();
+// HTTPS redirect şimdilik kapalı. Flutter HTTP ile çağırıyor.
+// app.UseHttpsRedirection();
 
 app.UseAuthorization();
 

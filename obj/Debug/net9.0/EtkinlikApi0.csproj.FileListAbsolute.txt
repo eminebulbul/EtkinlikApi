@@ -140,3 +140,4 @@
 /Users/bulbul/Desktop/projeler/EtkinlikApi0/obj/Debug/net9.0/EtkinlikApi0.pdb
 /Users/bulbul/Desktop/projeler/EtkinlikApi0/obj/Debug/net9.0/EtkinlikApi0.genruntimeconfig.cache
 /Users/bulbul/Desktop/projeler/EtkinlikApi0/obj/Debug/net9.0/ref/EtkinlikApi0.dll
+/Users/bulbul/Desktop/projeler/EtkinlikApi0/obj/Debug/net9.0/EtkinlikApi0.sourcelink.json

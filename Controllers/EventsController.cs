@@ -1,17 +1,28 @@
 using Microsoft.AspNetCore.Mvc;
-using EtkinlikApi0.Models; // EventDto için using ekle
-using System; // DateTime için
-using System.Collections.Generic; // List için
-using System.Linq; // Select (LINQ) için
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace EtkinlikApi0.Controllers // Proje ismine göre namespace'i ayarla
+namespace EtkinlikApi0.Controllers
 {
-    [Route("api/[controller]")] // -> /api/Events
+    public class EventDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; }
+        public string ImageUrl { get; set; }
+        public string PeopleNeeded { get; set; }
+        public string HostName { get; set; }
+        public string HostImageUrl { get; set; }
+        public DateTime Date { get; set; }
+        public string Location { get; set; }
+    }
+
+    [Route("api/[controller]")] // /api/Events
     [ApiController]
     public class EventsController : ControllerBase
     {
-        // Şimdilik sahte, statik bir etkinlik listesi oluşturalım
-        private static List<EventDto> _sampleEvents = new List<EventDto>
+        // Şu anlık sahte veri
+        private static readonly List<EventDto> _sampleEvents = new()
         {
             new EventDto {
                 Id = 1,
@@ -20,7 +31,7 @@ namespace EtkinlikApi0.Controllers // Proje ismine göre namespace'i ayarla
                 PeopleNeeded = "1",
                 HostName = "Ahmet Yılmaz (API)",
                 HostImageUrl = "https://i.pravatar.cc/150?img=1",
-                Date = DateTime.Now.AddDays(2).AddHours(5), // Örnek tarih
+                Date = DateTime.Now.AddDays(2).AddHours(5),
                 Location = "Starbucks API"
             },
             new EventDto {
@@ -33,7 +44,7 @@ namespace EtkinlikApi0.Controllers // Proje ismine göre namespace'i ayarla
                 Date = DateTime.Now.AddDays(3).AddHours(7),
                 Location = "Olimpik Halı Saha"
             },
-             new EventDto {
+            new EventDto {
                 Id = 3,
                 Title = "Sinemada Film İzleme Etkinliği",
                 ImageUrl = "https://via.placeholder.com/300x150.png?text=Sinema+API",
@@ -42,32 +53,27 @@ namespace EtkinlikApi0.Controllers // Proje ismine göre namespace'i ayarla
                 HostImageUrl = "https://i.pravatar.cc/150?img=8",
                 Date = DateTime.Now.AddDays(4).AddHours(6).AddMinutes(30),
                 Location = "Ankamall Cinemaximum"
-             }
+            }
         };
 
-        // GET /api/Events
-        [HttpGet]
+        [HttpGet] // GET /api/Events
         public ActionResult<IEnumerable<object>> GetEvents()
         {
-            Console.WriteLine("GET /api/Events isteği geldi."); // Konsola log yazalım
+            Console.WriteLine("GET /api/Events isteği geldi.");
 
-            // Flutter'ın beklediği formata dönüştürerek gönderelim
-            // Özellikle DateTime -> String formatlaması önemli
-            var formattedEvents = _sampleEvents.Select(e => new {
-                e.Id,
-                e.Title,
-                e.ImageUrl,
-                e.PeopleNeeded,
-                e.HostName,
-                e.HostImageUrl,
-                Date = e.Date, // Flutter tarafı DateTime.parse ile hallediyor
-                e.Location
+            // Flutter'ın beklentisine uygun (DateTime -> ISO string parse edilebilir)
+            var formatted = _sampleEvents.Select(e => new {
+                id = e.Id,
+                title = e.Title,
+                imageUrl = e.ImageUrl,
+                peopleNeeded = e.PeopleNeeded,
+                hostName = e.HostName,
+                hostImageUrl = e.HostImageUrl,
+                date = e.Date, // Flutter tarafında DateTime.parse() yapıyoruz
+                location = e.Location
             });
 
-            return Ok(formattedEvents);
+            return Ok(formatted);
         }
-
-        // TODO: Diğer CRUD operasyonları eklenebilir (GetById, Post, Put, Delete)
-        // TODO: Bu endpoint'i [Authorize] attribute'u ile koruma altına al (Giriş yapıldıktan sonra)
     }
 }
